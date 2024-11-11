@@ -22,6 +22,37 @@ class WMuseumSpider:
         self.options.add_argument(args)
         self.driver = webdriver.Chrome(self.options)
 
+    def get_pages_museums_url(
+        self, page_url: str, museums_urls: list, start_page: int, end_page: int
+    ) -> list[dict]:
+        """
+        Crawls museums url from all list pages.
+
+        Args:
+            page_url: the url of first page to start crawling
+            museums_urls: the list to store the previously crawled museums. it should start with an empty list.
+            start_page: the page to start crawling.
+            end_page: the page to end crawling.
+
+        Returns:
+            A list of dic which contain the visible web information of listed museum, including url, image, score
+        """
+
+        for i in tqdm(range(start_page, end_page + 1), total=end_page - start_page + 1):
+            try:
+                if i == 1:
+                    self.open_url(page_url)
+                else:
+                    self.open_url(page_url + f"?page={i}")
+
+                soup = BeautifulSoup(self.driver.page_source, "html.parser")
+                museums_urls.extend(self.get_single_page_museums_url(soup))
+            except:
+                print(i)
+                break
+
+        return museums_urls
+    
     def get_single_page_museums_url(self, soup: BeautifulSoup) -> list[dict]:
         """
         Crawls museums url from a single list page.
@@ -63,37 +94,7 @@ class WMuseumSpider:
 
         return page_museums_url
 
-    def get_pages_museums_url(
-        self, page_url: str, museums_urls: list, start_page: int, end_page: int
-    ) -> list[dict]:
-        """
-        Crawls museums url from all list pages.
-
-        Args:
-            page_url: the url of first page to start crawling
-            museums_urls: the list to store the previously crawled museums. it should start with an empty list.
-            start_page: the page to start crawling.
-            end_page: the page to end crawling.
-
-        Returns:
-            A list of dic which contain the visible web information of listed museum, including url, image, score
-        """
-
-        for i in tqdm(range(start_page, end_page + 1), total=end_page - start_page + 1):
-            try:
-                if i == 1:
-                    self.open_url(page_url)
-                else:
-                    self.open_url(page_url + f"?page={i}")
-
-                soup = BeautifulSoup(self.driver.page_source, "html.parser")
-                museums_urls.extend(self.get_single_page_museums_url(soup))
-            except:
-                print(i)
-                break
-
-        return museums_urls
-
+    
     def get_single_museum_info(self, page_url: str) -> dict:
         """
         Crawls information for each museum on Whichmuseum .

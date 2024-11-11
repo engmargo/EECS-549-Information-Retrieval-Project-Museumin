@@ -171,35 +171,6 @@ class WikiSpider:
                     f.write(json.dumps(museum_info) + "\n")
                     idx += 1
 
-    def get_single_museum_wiki_artile(self, wiki_url: str) -> str:
-        """
-        Use Wikipedia API to retrieve plain text of article for each museum
-
-        Args:
-            wiki_url(str): the museum url
-
-        Returns:
-            wikipedia plain article(str)
-        """
-
-        title = wiki_url.split("/")[-1]
-
-        url = (
-            "https://en.wikipedia.org/w/api.php?"
-            "format=json&action=query&prop=extracts"
-            f"&titles={title}&explaintext=True"
-        )
-        # print(title)
-
-        try:
-            article = list(requests.get(url).json()["query"]["pages"].values())[0][
-                "extract"
-            ]
-        except:
-            article = ""
-
-        return article
-
     def wiki_article_filter(self, state_museums_list: list[dict]) -> list[dict]:
         """
         Filter and keep those museums with wikipedia articles.
@@ -234,6 +205,55 @@ class WikiSpider:
                     )
 
         return wikipedia_museum_articles
+
+    def get_single_museum_wiki_artile(self, wiki_url: str) -> str:
+        """
+        Use Wikipedia API to retrieve plain text of article for each museum
+
+        Args:
+            wiki_url(str): the museum url
+
+        Returns:
+            wikipedia plain article(str)
+        """
+
+        title = wiki_url.split("/")[-1]
+
+        url = (
+            "https://en.wikipedia.org/w/api.php?"
+            "format=json&action=query&prop=extracts"
+            f"&titles={title}&explaintext=True"
+        )
+        # print(title)
+
+        try:
+            article = list(requests.get(url).json()["query"]["pages"].values())[0][
+                "extract"
+            ]
+        except:
+            article = ""
+
+        return article
+
+    def get_all_wiki_inbodx_info(self, museums: list[dict]) -> list[dict]:
+        """
+        Crawl inbox card that usually are right floated, including images, address, geo coordinates, year of being built.
+
+        Args:
+            museums(list): each dictionary in the list is a row in the museum list table where the keys are column titles.
+
+        Returns:
+            a list of dic and each dic is museum wikipedia inbox information, including museum_id,museum_name,museum_url(wiki), and etc.
+        """
+
+        new_museums_info = []
+        for museum in tqdm(museums, total=len(museums)):
+            inbodx_info = self.get_single_wiki_inbodx_info(museum)
+            museum.update(inbodx_info)
+            new_museums_info.append(museum)
+
+        self.driver.quit()
+        return new_museums_info
 
     def get_single_wiki_inbodx_info(self, museum: dict) -> dict[str, str]:
         """
@@ -285,26 +305,6 @@ class WikiSpider:
                 table_data[row_title] = row_text
 
         return table_data
-
-    def get_all_wiki_inbodx_info(self, museums: list[dict]) -> list[dict]:
-        """
-        Crawl inbox card that usually are right floated, including images, address, geo coordinates, year of being built.
-
-        Args:
-            museums(list): each dictionary in the list is a row in the museum list table where the keys are column titles.
-
-        Returns:
-            a list of dic and each dic is museum wikipedia inbox information, including museum_id,museum_name,museum_url(wiki), and etc.
-        """
-
-        new_museums_info = []
-        for museum in tqdm(museums, total=len(museums)):
-            inbodx_info = self.get_single_wiki_inbodx_info(museum)
-            museum.update(inbodx_info)
-            new_museums_info.append(museum)
-
-        self.driver.quit()
-        return new_museums_info
 
 
 # if __name__ == '__main__':
