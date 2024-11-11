@@ -2,9 +2,11 @@ from sentence_transformers import SentenceTransformer, util
 from numpy import ndarray
 from ranker import Ranker
 
+
 class VectorRanker(Ranker):
-    def __init__(self, bi_encoder_model_name: str, encoded_docs: ndarray,
-                 row_to_docid: list[int]) -> None:
+    def __init__(
+        self, bi_encoder_model_name: str, encoded_docs: ndarray, row_to_docid: list[int]
+    ) -> None:
         """
         Initializes a VectorRanker object.
 
@@ -19,13 +21,12 @@ class VectorRanker(Ranker):
         """
         # TODO: Instantiate the bi-encoder model here
         model = SentenceTransformer(bi_encoder_model_name)
-        # NOTE: we're going to use the cpu for everything here so if you decide to use a GPU, do not 
+        # NOTE: we're going to use the cpu for everything here so if you decide to use a GPU, do not
         # submit that code to the autograder
-        self.biencoder_model = model # Initialize the bi-encoder model here
+        self.biencoder_model = model  # Initialize the bi-encoder model here
         # TODO: Also include other necessary initialization code
         self.encoded_docs = encoded_docs
         self.row_to_docid = row_to_docid
-        
 
     def query(self, query: str) -> list[tuple[int, float]]:
         """
@@ -40,20 +41,20 @@ class VectorRanker(Ranker):
             or no results are return
         """
         # NOTE: Do not forget to handle edge cases on the inputs
-        if len(query) ==0 :
+        if len(query) == 0:
             return []
         else:
-        # TODO: Encode the query using the bi-encoder
+            # TODO: Encode the query using the bi-encoder
             embedding_query = self.biencoder_model.encode(query)
-        # TODO: Score the similarity of the query vector and document vectors for relevance
-        # Calculate the dot products between the query embedding and all document embeddings
-            sscores = util.dot_score(embedding_query,self.encoded_docs)[0].cpu().tolist()
+            # TODO: Score the similarity of the query vector and document vectors for relevance
+            # Calculate the dot products between the query embedding and all document embeddings
+            sscores = (
+                util.dot_score(embedding_query, self.encoded_docs)[0].cpu().tolist()
+            )
             # self.biencoder_model.similarity(embedding_query,self.encoded_docs).numpy()
-        # TODO: Generate the ordered list of (document id, score) tuples
-            scorelist = list(zip(self.row_to_docid,sscores))
+            # TODO: Generate the ordered list of (document id, score) tuples
+            scorelist = list(zip(self.row_to_docid, sscores))
             # TODO: Sort the list so most relevant are first
-            scorelist = sorted(scorelist,key = lambda x:x[1],reverse= True)
-            
-            return scorelist
-        
+            scorelist = sorted(scorelist, key=lambda x: x[1], reverse=True)
 
+            return scorelist
