@@ -15,26 +15,36 @@ class WikiSpider:
     def __init__(self,options = Options(),args='headless')-> None:
         
         """ 
-        initialize a WikiSpider.
+        This class is to web crawl museum list and article from wikipedia.
+        Initialize a headless webdriver 
         
-        args:
+        Arg:
             options: options for webdriver
-            driver: webdriver to use
-
+            args: args applied to options
         """
         self.options = options
         self.options.add_argument(args)
         self.driver = webdriver.Chrome(self.options)
-        pass
+   
     
-    # get museums lists from all states
+    
     def get_states_museums_list(self,wkp_url='https://en.wikipedia.org/wiki/List_of_museums_in_the_United_States') -> dict[int,list]:
-        
         '''
-        output: dict, state_name: museum_list
-        '''
-        self.open_url(wkp_url,)
+        Crawls museums list tables from all states.
         
+        Args:
+            wkp_url: collection of museums list in the nation
+        
+        Returns:
+            A dictionary containing museum list tables from each state.
+                key: state name
+                value(list): contains each row of table as a dictionary wich table titles set as keys.
+        '''
+        
+        self.open_url(wkp_url)
+        
+        
+        # crawl URLs of states from collections
         soup = BeautifulSoup(self.driver.page_source,'html.parser')
         states = soup.find('table',{'class':'col-begin'}).find_all('dl')
         
@@ -51,6 +61,7 @@ class WikiSpider:
         
         time.sleep(10)
         
+        # crawl table list from each state
         states_museums_list={}
         for idx,item in tqdm(enumerate(states_museums_urls),total = len(states_museums_urls)):
             try:
@@ -68,11 +79,20 @@ class WikiSpider:
         return states_museums_list
     
     
-    # get single museum list
     def get_single_state_museum_list(self,state_museum_full_url:str) -> list[dict]:
+        '''
+        Crawls museums list tables from each state.
+        
+        Args:
+            state_museum_full_url: URL of museum list for each state
+        
+        Returns:
+            A list of dictionaries. Each dictionary contains a row of data in the table.
+                key: table titles
+                value(list): the text of table value, the url of table value (default value "" when in absence of url).
+        '''
         
         self.open_url(state_museum_full_url)
-        # self.driver.get(state_museum_full_url)
         soup = BeautifulSoup(self.driver.page_source,'html.parser')
    
         table = soup.find('table',{'class':re.compile('jquery-tablesorter')})
@@ -116,11 +136,47 @@ class WikiSpider:
 
 
     def open_url(self,url:str)->None:
+        '''
+        Open URL with webdriverwait
+        
+        Args:
+            url(str): the url to be opened
+        '''
         self.driver.get(url)
         WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.TAG_NAME,"body")))
         
+    
+    def save_raw_list(self,file_name:str,state_museums_list:dict)->None:
+        '''
+        Save museum lists of all states. 
+        Note that another two keys would added by this function, 'museum_id' and 'museum_state'
         
+        Args:
+            file_name(str): the name used to save as
+            state_museums_list(list):the list to be saved
+        '''
+        
+        with open(file_name,'wt') as f:
+            idx = 0
+            for key,value in state_museums_list.items():
+                for museum in value:
+                    museum_info = {'museum_id':idx,'museum_state':key}
+                    museum_info.update(museum)                                                                      
+                    
+                    f.write(json.dumps(museum_info)+'\n')
+                    idx +=1
+    
     def get_single_museum_wiki_artile(self,wiki_url:str)->str:
+        '''
+        Use Wikipedia API to retrieve plain text of article for each museum
+        
+        Args:
+            wiki_url(str): the museum url
+            
+        Returns:
+            wikipedia plain article(str)
+        '''
+        
         title = wiki_url.split('/')[-1]
         
         url =(
@@ -137,29 +193,17 @@ class WikiSpider:
         
         return article
     
-    def save_raw_list(self,file_name:str,state_museums_list:dict)->None:
-        '''
-        args:
-            file_name: nema of file
-            state_museums_list: [{state1:museum_1(dict)},{state1:museum_2(dict)}]
-        
-        '''
-        
-        with open(file_name,'wt') as f:
-            idx = 0
-            for key,value in state_museums_list.items():
-                for museum in value:
-                    museum_info = {'museum_id':idx,'museum_state':key}
-                    museum_info.update(museum)                                                                      
-                    
-                    f.write(json.dumps(museum_info)+'\n')
-                    idx +=1
-                    
                     
     def wiki_article_filter(self,state_museums_list:list[dict])->list[dict]:
         '''
-        args:
-            state_muesums_list:[{'museum_id':1,'museum_state':michigan,'museum_name':(museum_name_text,museum_name_url)}]
+        Filter and keep those museums with wikipedia articles. 
+        This approach is to ensure that for each museum, there is enough text to be indexed. If textual data is enough to analysis, this step is unnecessary
+
+        Args:
+            state_museums_list(dict): each dictionary is a row in the museum list table where the keys are column titles.
+        
+        Returns:
+            dic for each musuem, including museum_id,museum_name,musuem_url and etc.
         '''
         
         wikipedia_museum_articles = []
@@ -180,6 +224,16 @@ class WikiSpider:
     
     
     def get_single_wiki_inbodx_info(self,museum:dict) -> dict[str,str]:
+        '''
+        Crawl inbodx card info from each museum's wikipedia article . 
+        
+        Args:
+            museum(dict): information metadata of a single museum, and museum url should be at least included.
+        
+        Returns:
+            a dic of inbodx card information, such as image, address. The keys vary because of inconsistent the inbox format.
+        '''
+        
         url = museum['museum_url']
         self.open_url(url)
         
@@ -221,6 +275,16 @@ class WikiSpider:
 
 
     def get_all_wiki_inbodx_info(self,museums:list[dict]) -> list[dict]:
+        '''
+        Crawl inbox card that usually are right floated, including images, address, geo coordinates, year of being built.
+        
+        Args:
+            museums(list): each dictionary in the list is a row in the museum list table where the keys are column titles.
+        
+        Returns:
+            a list of dic and each dic is museum wikipedia inbox information, including museum_id,museum_name,museum_url(wiki), and etc.
+        '''
+        
         new_museums_info = []
         for museum in tqdm(museums,total = len(museums)):
             inbodx_info = self.get_single_wiki_inbodx_info(museum)

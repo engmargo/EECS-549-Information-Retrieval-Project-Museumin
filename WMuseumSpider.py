@@ -3,8 +3,6 @@ from selenium import webdriver
 from tqdm import tqdm
 from nltk.stem.porter import *
 from selenium.webdriver.chrome.options import Options
-import time 
-import re
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -12,12 +10,30 @@ from selenium.webdriver.common.by import By
 
 class WMuseumSpider:
     def __init__(self,options = Options(),args='headless'):
+        """ 
+        This class is to web crawl museum list and article from WhichMuseum.
+        Initialize a headless webdriver 
+        
+        Arg:
+            options: options for webdriver
+            args: args applied to options
+        """
         self.options = options
         self.options.add_argument(args)
         self.driver = webdriver.Chrome(self.options)
     
     
     def get_single_page_museums_url(self,soup:BeautifulSoup)->list[dict]:
+        '''
+        Crawls museums url from a single list page.
+        
+        Args:
+            soup:beautifulsoup of this page
+        
+        Returns:
+            A list of dic which contain the visible web information of listed museum, including url, image, score
+        '''
+        
         page_museums_url = []
         webeles = soup.find('ol',{'class':'list list--grid'}).find_all('li')
         for ele in webeles:
@@ -42,11 +58,18 @@ class WMuseumSpider:
 
     def get_pages_museums_url(self,page_url:str,museums_urls:list,start_page:int,end_page:int)->list[dict]:
         '''
-        args
-            page_url: the first page
-            museums_urls:
-            n: the first n pages to be crawled
+        Crawls museums url from all list pages.
+        
+        Args:
+            page_url: the url of first page to start crawling
+            museums_urls: the list to store the previously crawled museums. it should start with an empty list.
+            start_page: the page to start crawling.
+            end_page: the page to end crawling.
+        
+        Returns:
+            A list of dic which contain the visible web information of listed museum, including url, image, score
         '''
+
         
         for i in tqdm(range(start_page,end_page+1),total=end_page-start_page+1):
             try:
@@ -65,6 +88,16 @@ class WMuseumSpider:
 
     
     def get_single_museum_info(self,page_url:str)->dict:
+        '''
+        Crawls information for each museum on Whichmuseum .
+        
+        Args:
+            page_url: the url to be crawled.
+        
+        Returns:
+            A dic tht contains opening hours and admission information.
+        '''
+
         self.open_url(page_url)
         soup = BeautifulSoup(self.driver.page_source,'html.parser')
         
@@ -95,24 +128,21 @@ class WMuseumSpider:
     
     
     def open_url(self,url:str)->None:
+        '''
+        Open URL with webdriverwait
+        
+        Args:
+            url(str): the url to be opened
+        '''
         self.driver.get(url)
         WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.TAG_NAME,"body")))
 
-
-    @staticmethod
-    def get_value_or_null(function,default_value):
-        try:
-            return function
-        except:
-            return default_value
     
-    
-    
-if __name__ == '__main__':
-    WMuseumSpider = WMuseumSpider()
-    page_url ='https://whichmuseum.com/place/united-states-2682'
-    museums_urls=[]
-    pages = (0,2)
-    is_start=True
-    WMuseumSpider.get_pages_museums_url(page_url,museums_urls,pages,is_start)
+# if __name__ == '__main__':
+#     WMuseumSpider = WMuseumSpider()
+#     page_url ='https://whichmuseum.com/place/united-states-2682'
+#     museums_urls=[]
+#     pages = (0,2)
+#     is_start=True
+#     WMuseumSpider.get_pages_museums_url(page_url,museums_urls,pages,is_start)
     
