@@ -62,16 +62,13 @@ class VectorRanker(Ranker):
                         encoded_docs.append(self.encoded_docs[row])
                     else:
                         row_to_docid.remove(id)
-
-                self.encoded_docs = encoded_docs
-                self.row_to_docid = row_to_docid
                 
-                del encoded_docs,row_to_docid
-                
-            scorelist = self.get_scorelist(embedding_query, self.encoded_docs)
-
+            
+            scorelist = self.get_scorelist(embedding_query, encoded_docs if len(filterids)>0 else self.encoded_docs)
+            
             if self.pseudofeedback_num_docs > 0:
-                id2row = {id:row for row,id in enumerate(self.row_to_docid)}
+                row2id = row_to_docid if len(filterids)>0 else self.row_to_docid
+                id2row = {id:row for row,id in enumerate(row2id)}
                 
                 reldocs=[]
                 for id,doc in enumerate(scorelist):
