@@ -307,7 +307,7 @@ class Indexer:
     @staticmethod
     def create_index(index_type: IndexType, dataset_path: str,
                      document_preprocessor: Tokenizer, stopwords: set[str],
-                     minimum_word_frequency: int, text_key="wiki_article",
+                     minimum_word_frequency: int, text_key="texts",
                      max_docs: int = -1, doc_augment_dict: dict[int, list[str]] | None = None) -> InvertedIndex:
         '''
         This function is responsible for going through the documents one by one and inserting them into the index after tokenizing the document
@@ -395,10 +395,10 @@ class Indexer:
         for idx,line in tqdm(enumerate(f),total = 5716):
             if max_docs == -1 or (idx<max_docs) :
                 doc = json.loads(line)
-                if text_key == 'wiki_article' and doc_augment_dict != None:
+                if text_key == 'texts' and doc_augment_dict != None:
                     for query in doc_augment_dict[doc['museum_id']]:
                         doc[text_key] = doc[text_key]+'\n'+ query #append queries
-                
+                        
                 tokens = tokenizer.tokenize(doc[text_key])
                 if minimum_word_frequency>0:
                     # update counter and index
@@ -413,7 +413,7 @@ class Indexer:
     def insert_data(f,tokenizer,text_key,stopwords,ivtindex,doc_augment_dict) ->InvertedIndex:
         for i,line in tqdm(enumerate(f),total = 5716):
                 doc = json.loads(line)
-                if text_key == 'text' and doc_augment_dict != None:
+                if text_key == 'texts' and doc_augment_dict != None:
                     for query in doc_augment_dict[doc['museum_id']]:
                         doc[text_key] = query+'\n'+doc[text_key] #append queries
                         

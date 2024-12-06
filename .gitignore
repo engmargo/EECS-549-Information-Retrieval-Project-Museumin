@@ -1,4 +1,15 @@
 list2label2.csv
 list2label.csv
 pipeline.py
-vector_ranker.py
+newcat.py
+chroma_langchain_db/
+.zshrc
+category.text
+results_1205.jsonl
+update1110.ipynb
+update1125.ipynb
+autocomplete.py
+llamaranker.py
+__cache__/
+data_cleaning.ipynb
+web_crawling.ipynb

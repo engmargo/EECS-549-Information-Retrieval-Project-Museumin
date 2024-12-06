@@ -1,0 +1,598 @@
+<!--Author: Prithvijit Dasgupta-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MuseumIn</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+        integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
+    <link href="https://whichmuseum.com/build/app.bee4ce20.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/multi-select-tag.css">
+    <script src="/static/multi-select-tag.js"></script>
+</head>
+
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+
+    .header {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .footer {
+        display: flex;
+        flex-direction: row;
+        background-color: white;
+    }
+
+    .left-pad {
+        width: 35%;
+        padding: 0 !important;
+    }
+
+    .page-mid {
+        width: 65%;
+    }
+
+    .right-pad {
+        width: 20%;
+    }
+
+    .header-text {
+        font-size: 30;
+        text-align: center;
+    }
+
+    .page {
+        display: flex;
+        flex-direction: column;
+        font-family: 'Fira Sans';
+    }
+
+    .search-bar {
+        position: relative;
+        left: 15%;
+        display: flex;
+        flex-direction: row;
+        width: 80%;
+    }
+
+    .search-box {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .results-area {
+        display: flex;
+        flex-direction: row;
+        flex-shrink: 0;
+    }
+
+    .search-mid {
+        display: flex;
+        flex-direction: column;
+        width: 65%;
+    }
+
+    .lds-hourglass {
+        display: inline-block;
+        position: relative;
+        width: 100px;
+        height: 100px;
+    }
+
+    .lds-hourglass:after {
+        content: " ";
+        display: block;
+        border-radius: 50%;
+        width: 0;
+        height: 0;
+        margin: 8px;
+        box-sizing: border-box;
+        border: 32px solid #000;
+        border-color: #000 transparent #000 transparent;
+        animation: lds-hourglass 1.2s infinite;
+    }
+
+    .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 10px;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        padding: 10px;
+        width: 20%;
+        background-image: linear-gradient(#ffffff, #e1d6a2, #030927);
+        transition: all 0.5s ease;
+    }
+
+    .h5 {
+        color: #1a2557;
+        margin-bottom: 10px;
+    }
+
+    .container {
+        position: relative;
+        margin-top: 1px;
+        width: auto;
+    }
+
+    .result-box {
+        margin: 0px;
+        background-color: white;
+        border-radius: 3px;
+        max-height: 300px;
+        overflow-y: scroll;
+    }
+
+    .nav-div {
+        position: relative;
+        margin-bottom: 10px
+    }
+
+    .nav-div-title {
+        position: relative;
+        margin-left: 0;
+        margin: 0;
+        float: left;
+    }
+
+    .nav-div-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .results ul {
+        list-style-type: none;
+    }
+
+    .results-item {
+        width: 100%;
+        height: auto;
+    }
+
+    .results-item-title {
+        display: flex;
+        height: 2rem;
+        font-size: medium;
+        justify-content: space-between;
+    }
+
+    .results-item-title .h5 {
+        float: inline-start;
+        align-items: center;
+        height: fit-content;
+        margin: 0px;
+        margin-right: 10px;
+        padding: 0;
+    }
+
+    .results-item-title p {
+        padding: 1px;
+        border-radius: 5px;
+        border-color: #041d89;
+        background-color: rgb(227, 238, 249);
+        width: fit-content;
+        height: fit-content;
+        align-content: center;
+        font-size: small;
+    }
+
+    .results-list-body {
+        display: flex;
+        font-size: 13px;
+    }
+
+    .results-list-body img {
+        margin: 5px;
+        padding: 5px;
+        width: 7rem;
+        height: 7rem;
+    }
+
+    .item-text {
+        display: flex;
+        flex-direction: column;
+        word-break: normal;
+        padding-bottom: 0;
+        justify-content: baseline;
+    }
+
+    .results-list-description {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .item-location {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        align-items: end;
+    }
+
+
+    #github-img {
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+    }
+
+
+    @keyframes lds-hourglass {
+        0% {
+            transform: rotate(0);
+            animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        }
+
+        50% {
+            transform: rotate(900deg);
+            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        100% {
+            transform: rotate(1800deg);
+        }
+    }
+</style>
+
+<body>
+    <div class="sidebar">
+        <nav>
+            <div class="nav-div-container">
+                <h2 class="h2">MuseumIn</h3>
+            </div>
+            <div class="nav-div">
+                <div class="nav-div-title">
+                    <h3 class="h5">State</h3>
+                </div>
+                <div class='container' id="state-container">
+                    <select name="state-input" id="state-input" multiple></select>
+                </div>
+            </div>
+            <div class="nav-div">
+                <div class="nav-div-title">
+                    <h3 class="h5">Category</h3>
+                </div>
+                <div class='container' id="category-container">
+                    <select name="category-input" id="category-input" multiple></select>
+                </div>
+            </div>
+
+        </nav>
+    </div>
+    <div class="page">
+        <div class="header">
+            <div class="left-pad"></div>
+            <div class="page-mid">
+                <h1 class="header-text">Have Fun in Museums!</h1>
+                <p class="lead text-center float-center mb-2" style="font-size: 12px;">Click for more interesting things
+                    <b>&rarr;</b>
+                    <a href="https://github.com/engmargo" target="_blank">
+                        <img id="github-img" src="./static/github-mark.png" alt="github-icon">
+                    </a>
+                </p>
+            </div>
+            <div class="right-pad"></div>
+        </div>
+        <div class="search-bar">
+            <div class="left-pad"></div>
+            <div class="page-mid">
+                <div class="search-box">
+                    <input style="width: 70%; padding: 10px; height:fit-content; margin-top: 10px;border-radius:20px"
+                        type="text" placeholder="Location, Activity, Name..." id="query" />
+                    <div style="width: 17%;">
+                        <button class="pure-button pure-button-primary"
+                            style="position:relative;left:10%;top:20%;border-radius:10px;background:#1a2557"
+                            onclick="doSearch('/search', 'POST')">Search!</button>
+                    </div>
+                </div>
+            </div>
+            <div class="right-pad"></div>
+        </div>
+        <div class="results-area" id="results-area">
+            <div class="left-pad"></div>
+            <div class="search-mid">
+                <div class="lds-hourglass center" id="load-spinner" hidden></div>
+                <!-- <div class="results" id="results">
+                    <ul>
+                        <li>
+                            <div class="results-item">
+                                <div class="results-item-title">
+                                    <h5 class="h5"><a href="#" target="_black">1. Musuem 1</a></h5>
+                                    <p>&nbsp; &nbsp;Art &nbsp;&nbsp;</p>
+                                </div>
+                                <div class="results-list-body">
+                                    <img src="https://image.wmsm.co/656de0ea41a7f/national-historical-museum-tirana.webp?quality=80&width=750&height=500&aspect_ratio=750%3A500" alt="not avaible">
+                                    <div class="item-text">
+                                        <div class="item-location">
+                                            <p><i>Michigan,2123 Street</i></p>
+                                            <p><i>Admission: Free</i></p>
+                                        </div>
+                                        <div class="results-list-description">
+                                            <p> 
+                                                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div> -->
+                <div class="results" id="results" hidden>
+                    <h2 style="text-align: center;" id="no-res-text">No results found!</h2>
+                </div>
+            </div>
+            <div class="right-pad"></div>
+        </div>
+        <div class="footer">
+            <div class="left-pad">
+                <button class="pure-button" style="float: right;" id="prev" onclick="doSearch(prev, 'GET')"
+                    hidden>Previous</button>
+            </div>
+            <div class="page-mid" id="footer-mid" style="text-align: center;background:white">
+            </div>
+            <div class="right-pad">
+                <button class="pure-button pure-button-primary" id="next" onclick="doSearch(next, 'GET')"
+                    hidden>Next</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+<script>
+    let state_keywords = [
+        "all  (5716)",
+        "Alabama   (79)",
+        "Alaska   (25)",
+        "Washington (state)   (115)",
+        "Arizona   (97)",
+        "Arkansas   (74)",
+        "California   (80)",
+        "North Carolina   (203)",
+        "Colorado   (101)",
+        "Utah   (63)",
+        "Connecticut   (152)",
+        "Delaware   (30)",
+        "Florida   (336)",
+        "Missouri   (103)",
+        "Georgia   (148)",
+        "Tennessee   (129)",
+        "Hawaii   (28)",
+        "Idaho   (20)",
+        "Illinois   (231)",
+        "Indiana   (160)",
+        "Iowa   (109)",
+        "Kansas   (82)",
+        "Kentucky   (95)",
+        "Louisiana   (76)",
+        "Maine   (115)",
+        "Maryland   (116)",
+        "Massachusetts   (281)",
+        "Michigan   (218)",
+        "Minnesota   (181)",
+        "Mississippi   (59)",
+        "Montana   (35)",
+        "Nebraska   (69)",
+        "New Hampshire   (69)",
+        "New Jersey   (159)",
+        "New Mexico   (77)",
+        "New York   (425)",
+        "North Dakota   (54)",
+        "Ohio   (164)",
+        "Oklahoma   (78)",
+        "Pennsylvania   (269)",
+        "Rhode Island   (71)",
+        "South Carolina   (92)",
+        "Wisconsin   (163)",
+        "South Dakota   (39)",
+        "Vermont   (49)",
+        "Virginia   (254)",
+        "West Virginia   (70)",
+        "Washington, D.C.   (73)",
+    ];
+
+
+    let cat_keywords = [
+        "all   (5716)",
+        "unknown  (81)",
+        "Transportation and Technology  (344)",
+        "Art and Culture  (822)",
+        "Miscellaneous and Leisure  (407)",
+        "History and Heritage  (1113)",
+        "Military and Warfare  (388)",
+        "Industry and Commerce  (109)",
+        "Historic Sites and Buildings  (1411)",
+        "Science and Nature  (421)",
+        "Ethnic and Cultural Heritage  (126)",
+        "Sports and Leisure  (140)",
+        "Living History  (217)",
+        "Society, Institutions and Law  (137)",
+    ]
+
+    const in2boxes = ["state-input", "category-input"];
+
+    function selector(name) {
+        const item = document.getElementById(name);
+        let inputboxs = '';
+        let keywords = name.includes("state") ? state_keywords : cat_keywords;
+        keywords.forEach(keyword => {
+            inputboxs += `<option value =${keyword.split('(')[0].trim().split(" ").join('-')}>` + keyword + "</option>"
+        });
+
+        item.innerHTML = inputboxs;
+    }
+
+    in2boxes.forEach(selector);
+    in2boxes.forEach(name => new MultiSelectTag(name, {
+        placeholder: `Search ${name.split('-')[0]}`
+    }));
+</script>
+
+<script>
+    let prev = null
+    let next = null
+
+    document.getElementById('query').onkeypress = function (e) {
+        if (!e) e = window.event;
+        var keyCode = e.code || e.key;
+        if (keyCode == 'Enter') {
+            doSearch('/search', 'POST')
+        }
+    }
+
+    function doSearch(url, method) {
+        let startTime = (new Date()).getTime()
+        let footer = document.getElementById('footer-mid')
+        const displayBox = document.getElementById('results')
+        displayBox.setAttribute('hidden', true)
+        footer.setAttribute('hidden', true)
+        document.getElementById('load-spinner').removeAttribute('hidden')
+        if (method == 'POST') {
+            document.getElementById('prev').setAttribute('hidden', true)
+            document.getElementById('next').setAttribute('hidden', true)
+        }
+        const query = document.getElementById('query').value.trim()
+
+        let states = []
+        let cates = []
+        const filterby = ['state-container', 'category-container']
+        filterby.forEach(name => {
+            const element = document.getElementById(name)
+            let lists = []
+            if (element && element.getElementsByClassName('input-container').length>0) {
+                let lists = [...element.getElementsByClassName('item-label')].map(el=>el.textContent.trim())
+
+                if (name == 'state-container') {
+                    states = lists
+                } else if(name == 'category-container') {
+                    cates = lists
+                }
+            }
+        }
+        )
+        console.log(states)
+        console.log(cates)
+        let results = fetch(url, {
+            method,
+            body: method == 'POST' ? JSON.stringify({
+                'query': query,
+                'states':states,
+                'cates':cates
+            }) : null,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                prev = data.page.prev
+                next = data.page.next
+                return Promise.all(data.results)
+            })
+            .then(results => {
+                if (results.length > 0) {
+
+                    const olElement = document.createElement('ul')
+                    olElement.setAttribute('id', 'search-results')
+                    for (item of results) {
+                        const liElement = document.createElement('li')
+                        const block = document.createElement('div')
+                        const titleblock = document.createElement('div')
+                        const bodyblock = document.createElement('div')
+                        const textblock = document.createElement('div')
+                        const locblock = document.createElement('div')
+                        const desblock = document.createElement('div')
+
+                        const titleNode = document.createElement('h5')
+                        const nameAnchor = document.createElement('a')
+                        const cateNode = document.createElement('p')
+                        const imgNode = document.createElement('img')
+
+
+                        block.className = 'results-item'
+
+                        titleblock.className = 'results-item-title'
+                        titleNode.className = 'h5'
+                        nameAnchor.href = item.website
+                        nameAnchor.target = '_blank'
+                        let name = item.museum_name.length > 40 ? item.museum_name.slice(0, 40) + '...' : item.museum_name
+                        nameAnchor.textContent = `${item.id}.${name}`
+                        titleNode.append(nameAnchor)
+                        titleblock.append(titleNode)
+                        cateNode.innerHTML = `&nbsp;&nbsp;${item.category}&nbsp;&nbsp;`
+                        titleblock.append(cateNode)
+                        block.append(titleblock)
+
+                        bodyblock.className = "results-list-body"
+                        imgNode.src = item.img_urls
+                        imgNode.alt = "Unavailable"
+                        bodyblock.appendChild(imgNode)
+
+                        textblock.className = "item-text"
+                        locblock.className = "item-location"
+                        locblock.innerHTML = `<p><i>${item.location}</p></i><p><i>${item.admission}</p></i>`
+                        textblock.append(locblock)
+                        bodyblock.append(textblock)
+
+                        desblock.className = "results-list-description"
+                        desblock.innerHTML = `<p>${item.description.slice(0, 250) + '...'}</p>`
+                        textblock.append(desblock)
+
+                        bodyblock.append(textblock)
+                        block.append(bodyblock)
+
+                        liElement.append(block)
+                        olElement.append(liElement)
+                    }
+
+                    noResNode = document.getElementById('no-res-text')
+                    oldNode = document.getElementById('search-results')
+                    if (oldNode)
+                        displayBox.removeChild(oldNode)
+                    if (noResNode)
+                        displayBox.removeChild(noResNode)
+                    displayBox.append(olElement)
+                }
+                document.getElementById('load-spinner').setAttribute('hidden', true)
+                document.getElementById('prev').removeAttribute('hidden')
+                document.getElementById('next').removeAttribute('hidden')
+            })
+            .catch(err => {
+                console.log('Search API failed', err)
+                noResNode = document.getElementById('no-res-text')
+                document.getElementById('load-spinner').setAttribute('hidden', true)
+                noResNode.removeAttribute('hidden')
+            })
+            .finally(_ => {
+                footer.removeAttribute('hidden')
+                timer = document.getElementById('timer')
+                if (timer) {
+                    footer.removeChild(timer)
+                }
+                newTimer = document.createElement('h4')
+                newTimer.setAttribute('id', 'timer')
+                totalTime = (new Date()).getTime() - startTime
+                newTimer.textContent = `Time taken: ${totalTime}ms`
+                displayBox.removeAttribute('hidden')
+                footer.append(newTimer)
+            })
+    }
+</script>
+
+</html>

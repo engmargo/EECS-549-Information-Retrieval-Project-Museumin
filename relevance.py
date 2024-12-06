@@ -10,12 +10,41 @@ from tqdm import tqdm
 
 # from collections import defaultdict
 import time
+import ranker
+import csv 
 
 """
 Treat search results from the ranking function that are not listed in the file as non-relevant. Thus,
 three relevance levels: 0 (non-relevant), 1 (marginally relevant), and 2 (very relevant). 
 """
 
+def nfairr_score(actual_omega_values: list[int], cut_off=200) -> float:
+    """
+    Computes the normalized fairness-aware rank retrieval (NFaiRR) score for a list of omega values
+    for the list of ranked documents.
+    If all documents are from the protected class, then the NFaiRR score is 0.
+
+    Args:
+        actual_omega_values: The omega value for a ranked list of documents
+            The most relevant document is the first item in the list.
+        cut_off: The rank cut-off to use for calculating NFaiRR
+            Omega values in the list after this cut-off position are not used. The default is 200.
+
+    Returns:
+        The NFaiRR score
+    """
+    # Compute the FaiRR and IFaiRR scores using the given list of omega values
+    minnum = np.min((len(actual_omega_values),cut_off))
+    rankedlist = sorted(actual_omega_values[:minnum],reverse=True)
+    fairr = 0 
+    ifairr = 0
+    for i in range(minnum):
+        denominator = 1 if i ==0 else np.log2(i+1)
+        fairr += actual_omega_values[i]/denominator
+        ifairr += rankedlist[i]/denominator
+        # print(i,denominator,actual_omega_values[i],rankedlist[i])
+
+    return fairr/ifairr
 
 def map_score(search_result_relevances: list[int], cut_off: int = 10) -> float:
     """
@@ -98,7 +127,49 @@ def ndcg_score(
     else:
         return svalues / ivalues
 
+def run_fairness_test(attributes_file_path: str, protected_class: str, queries: list[str],
+                      ranker:ranker, cut_off: int = 200) -> float:
+    """
+    Measures the fairness of the IR system using the NFaiRR metric.
 
+    Args:
+        attributes_file_path: The filename containing the documents about people and their demographic attributes
+        protected_class: A specific protected class (e.g., Ethnicity, Gender)
+        queries: A list containing queries
+        ranker: A ranker configured with a particular scoring function to search through the document collection
+        cut_off: The rank cut-off to use for calculating NFaiRR
+
+    Returns:
+        The average NFaiRR score across all queries
+    """
+    # Find the documents associated with the protected class
+    attri_to_docid = []
+    with open(attributes_file_path,'rt') as f:
+        data = csv.reader(f)
+        for idx, line in enumerate(data):
+            if idx ==0:
+                cols = [item for item in line]
+                loc = cols.index(protected_class)
+            else:
+                if len(line[loc])>0:
+                    attri_to_docid.append(line[-1])
+    # Loop through the queries and
+    #       1. Create the list of omega values for the ranked list.
+    #       2. Compute the NFaiRR score
+    # This fairness metric has some 'issues':
+    # 1)if all the pages associated with one attributes are ranked at the top and the rest 
+    # are ranked at the bottom (but still above t) 
+    # 2) if no pages with attributes appear above t
+    
+    scores = []
+    for query in queries:
+        results = ranker.query(query)
+        actual_omega_values = [0 if item[0] in attri_to_docid else 1 for item in results]
+        scores.append(nfairr_score(actual_omega_values,cut_off))
+        
+    return np.mean(scores)
+    
+    
 # run relevance test by query
 def run_relevance_tests(relevance_data_filename, ranker) -> dict:
     # Implement running relevance test for the search system for multiple queries.
