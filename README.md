@@ -8,6 +8,12 @@ A National Wide Museum Search Engine
 3. Ensure fastapi library is downloaded.
 4. Run the main script with `fastapi dev app.py`
 
+## Demo
+
+
+https://github.com/user-attachments/assets/0de7619f-fa1c-4e7a-92c8-9e7e9c34f208
+
+
 ## Technologies Used
 - Langchain
 - HuggingFace
