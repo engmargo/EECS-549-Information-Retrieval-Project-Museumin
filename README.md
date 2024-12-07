@@ -9,7 +9,7 @@ A National Wide Museum Search Engine
 4. Run the main script with `fastapi dev app.py`
 
 ## Inputs Note
-output list is randomly organized When query is empty and multiple selctions exist.
+Output list is randomly organized When query is empty and multiple selctions exist.
 
 ## Technologies Used
 - Langchain
