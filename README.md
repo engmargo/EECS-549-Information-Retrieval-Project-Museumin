@@ -11,6 +11,9 @@ A National Wide Museum Search Engine
 ## Inputs Note
 Output list is randomly organized When query is empty and multiple selctions exist.
 
+## Demo
+<img width="1139" alt="Screenshot 2024-12-06 at 8 24 13 PM" src="https://github.com/user-attachments/assets/b0dceb4a-7358-4e4f-8c93-0f6ba15639c0">
+
 ## Technologies Used
 - Langchain
 - HuggingFace
