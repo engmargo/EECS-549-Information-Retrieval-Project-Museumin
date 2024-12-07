@@ -297,17 +297,29 @@ class SearchEngine(BaseSearchEngine):
     ) -> list[SearchResponse]:
         # 1. Use the ranker object to query the search pipeline
         # 2. This is example code and may not be correct.
+        
         filterids = set()
         if len(states) > 0:
             for state in states:
                 filterids.update(self.state_to_ids[state])
-
+            
+        filterids2 = set()
         if len(cates) > 0:
             for cate in cates:
-                filterids.update(self.categories_to_docid[cate])
-
-
-        results = self.pipeline.query(query, list(filterids))
+                filterids2.update(self.categories_to_docid[cate])
+        
+        if len(filterids)>0 and len(filterids2)>0:
+            filterids = filterids.intersection(filterids2)
+        else:
+            filterids = filterids.union(filterids2)
+        
+        del filterids2
+        
+        
+        if len(query) ==0:
+            results = [(id,idx) for idx,id in enumerate(filterids)]
+        else:
+            results = self.pipeline.query(query,list(filterids))
             
         if self.chunk:
             bestrks = {}

@@ -53,23 +53,11 @@ class VectorRanker(Ranker):
             embedding_query = self.biencoder_model.encode(query)
             #   Score the similarity of the query vector and document vectors for relevance
             
-            if len(filterids)>0:
-                encoded_docs = []
-                row_to_docid = self.row_to_docid.copy()
-
-                for row,id in enumerate(self.row_to_docid):
-                    if id in filterids:
-                        encoded_docs.append(self.encoded_docs[row])
-                    else:
-                        row_to_docid.remove(id)
-                
-            
-            scorelist = self.get_scorelist(embedding_query, encoded_docs if len(filterids)>0 else self.encoded_docs)
+            encoded_docs,row_to_docid,id2row = self.filter(filterids)
+                        
+            scorelist = self.get_scorelist(embedding_query, encoded_docs,row_to_docid)
             
             if self.pseudofeedback_num_docs > 0:
-                row2id = row_to_docid if len(filterids)>0 else self.row_to_docid
-                id2row = {id:row for row,id in enumerate(row2id)}
-                
                 reldocs=[]
                 for id,doc in enumerate(scorelist):
                     if id<self.pseudofeedback_num_docs:
@@ -82,19 +70,36 @@ class VectorRanker(Ranker):
                     embedding_query, self.pseudofeedback_alpha
                 ) + np.multiply(avg_reldocs, self.pseudofeedback_beta)
 
-                scorelist = self.get_scorelist(new_embedding_query, self.encoded_docs)
+                scorelist = self.get_scorelist(new_embedding_query, self.encoded_docs,row_to_docid)
 
             return scorelist
     
     def get_scorelist(
-        self, embedding_query: list, encoded_docs: list
+        self, embedding_query: list, encoded_docs: list,row2id:list[int]
     ) -> list[tuple[int, float]]:
 
         sscores = util.dot_score(embedding_query, encoded_docs)[0].cpu().tolist()
         # self.biencoder_model.similarity(embedding_query,self.encoded_docs).numpy()
         # Generate the ordered list of (document id, score) tuples
-        scorelist = list(zip(self.row_to_docid, sscores))
+        scorelist = list(zip(row2id, sscores))
         # Sort the list so most relevant are first
         scorelist = sorted(scorelist, key=lambda x: x[1], reverse=True)
 
         return scorelist
+        
+    def filter(self,filterids:list[int])->tuple:
+        if len(filterids)>0:
+            encoded_docs = []
+            row_to_docid = self.row_to_docid.copy()
+
+            for row,id in enumerate(self.row_to_docid):
+                if id in filterids:
+                    encoded_docs.append(self.encoded_docs[row])
+                else:
+                    row_to_docid.remove(id)
+        
+            id2row = {id:row for row,id in enumerate(row_to_docid)}
+            
+            return encoded_docs,row_to_docid,id2row
+        else:
+            return self.encoded_docs,self.row_to_docid,{id:row for row,id in enumerate(self.row_to_docid)}
